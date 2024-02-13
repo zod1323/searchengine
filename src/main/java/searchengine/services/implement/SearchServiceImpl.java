@@ -2,6 +2,7 @@ package searchengine.services.implement;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import searchengine.dto.search.SearchResults;
 import searchengine.dto.search.StatisticsSearch;
@@ -31,6 +32,11 @@ public class SearchServiceImpl implements SearchService {
     private final PageRepository pageRepository;
     private final IndexRepository indexSearchRepository;
     private final SiteRepository siteRepository;
+    @Value("${app.prepositionsRu}")
+    private List<String> prepositionsRu;
+
+    @Value("${app.prepositionsEn}")
+    private List<String> prepositionsEn;
 
     @Override
     public SearchResults allSiteSearch(String searchText, int offset, int limit) {
@@ -38,9 +44,11 @@ public class SearchServiceImpl implements SearchService {
         List<SitePage> siteList = siteRepository.findAll();
         List<String> textLemmaList = getLemmaFromSearchText(searchText);
 
+
         List<Lemma> foundLemmaList = siteList.stream()
                 .flatMap(site -> getLemmaListFromSite(textLemmaList, site).stream())
                 .collect(Collectors.toList());
+
 
         return getSearchResults(offset, limit, textLemmaList, foundLemmaList);
     }
@@ -59,6 +67,7 @@ public class SearchServiceImpl implements SearchService {
 
     private SearchResults getSearchResults(int offset, int limit, List<String> textLemmaList, List<Lemma> foundLemmaList) {
         List<StatisticsSearch> searchData = getSearchDtoList(foundLemmaList, textLemmaList);
+        log.info("searchData" + searchData.size());
         searchData.sort((o1, o2) -> Float.compare(o2.getRelevance(), o1.getRelevance()));
 
         log.info("Data found.");
@@ -150,21 +159,11 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private boolean isPreposition(String word) {
-        List<String> prepositionsRu = Arrays.asList("А-ля", "б", "без", "без ведома", "безо", "безъ", "благодаря", "близ", "близко от", "близь", "в", "в виде", "в зависимости от", "в интересах", "в качестве", "в лице", "в отношении", "в пандан", "в пользу", "в преддверии", "в продолжение", "в результате", "в роли", "в связи с", "в силу", "в случае", "в соответствии с", "в течение", "в целях", "в честь", "в/на", "вблизи", "ввиду", "вглубь", "вдогон", "вдоль", "вдоль по", "взамен", "включая", "вкруг", "вместо", "вне", "внизу", "внутри", "внутрь", "во", "во имя", "во славу", "вовнутрь", "возле", "вокруг", "вопреки", "вослед", "впереди", "вплоть до", "впредь до", "вразрез", "вроде", "вслед", "вслед за", "вследствие", "встречу", "выключая", "выше", "д", "дли", "для", "для-ради", "до", "з", "за", "за вычетом", "за исключением", "за счёт", "за-ради", "замест", "заместо", "и", "из", "из-за", "из-под", "из-подо", "изнутри", "изо", "исключая", "исходя из", "к", "касаемо", "касательно", "ко", "кончая", "кроме", "кругом", "л", "лицом к лицу с", "м", "меж", "между", "мимо", "н", "на", "на благо", "на виду у", "на глазах у", "на предмет", "наверху", "навроде", "навстречу", "над", "надо", "назад", "назади", "назло", "накануне", "наместо", "наперекор", "наперерез", "наперехват", "наподобие", "наподобье", "напротив", "наряду с", "насупротив", "насчёт", "начиная с", "не без", "не считая", "невзирая на", "недалеко от", "независимо от", "несмотря", "несмотря на", "ниже", "о", "об", "обо", "обок", "обочь", "около", "окрест", "окроме", "окромя", "округ", "опосля", "опричь", "от", "от имени", "от лица", "относительно", "ото", "п", "перед", "передо", "по", "по линии", "по мере", "по направлению к", "по отношению к", "по поводу", "по причине", "по случаю", "по сравнению с", "по-за", "по-над", "по-под", "поблизости от", "повдоль", "поверх", "под", "под видом", "под эгидой", "подле", "подо", "подобно", "позади", "позадь", "позднее", "помимо", "поперёд", "поперёк", "порядка", "посверху", "посереди", "посередине", "посерёдке", "посередь", "после", "посреди", "посредине", "посредством", "пред", "предо", "преж", "прежде", "при", "при помощи", "применительно к", "про", "промеж", "промежду", "против", "противно", "противу", "путём", "р", "ради", "рядом с", "с", "с ведома");
-        List<String> prepositionsEn = Arrays.asList("a", "aboard", "about", "abt", "above", "abreast", "absent", "across", "after", "against", "along", "aloft", "alongside", "amid", "amidst", "mid", "midst", "among", "amongst", "anti", "and", "apropos", "around", "round", "as", "aslant", "astride", "at", "@", "atop", "on top", "bar", "barring", "before", "b", "behind", "below", "beneath", "neath", "beside", "besides", "between", "beyond", "but", "by", "chez", "circa", "c", "come", "concerning", "contra", "counting", "cum", "despite", "spite", "down", "during", "effective", "ere", "except", "excepting", "excluding", "failing", "following", "for", "from", "in", "including", "inside", "into", "less", "like", "minus", "modulo", "mod", "near", "nearer", "nearest", "next", "notwithstanding", "of", "o", "off", "offshore", "on", "onto", "opposite", "out", "outside", "over", "pace", "past", "pending", "per", "plus", "post", "pre", "pro", "qua", "re", "regarding", "respecting", "sans", "save", "saving", "short", "since", "sub", "than", "through", "thru", "throughout", "through", "till", "times", "to", "touching", "toward", "under", "underneath", "unlike", "until", "unto", "up", "upon", "versus", "vs", "via", "vice", "vis", "wanting", "with", "w", "within", "w/i", "without", "thou", "w/o", "worth");
         return prepositionsRu.contains(word) || prepositionsEn.contains(word);
     }
 
     private List<Lemma> getLemmaListFromSite(List<String> lemmas, SitePage site) {
-
-        List<Lemma> lemmaList = lemmaRepository.findLemmaListBySite(lemmas, site);
-        List<Lemma> result = new ArrayList<>(lemmaList);
-        int maxPages = 100;
-        result = result.stream()
-                .filter(lemma -> lemma.getFrequency() <= maxPages)
-                .sorted(Comparator.comparingInt(Lemma::getFrequency))
-                .collect(Collectors.toList());
-        return result;
+        return lemmaRepository.findLemmaListBySite(lemmas, site);
     }
 
     private String getSnippet(String content, List<String> lemmaList) {

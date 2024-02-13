@@ -15,7 +15,7 @@ public interface LemmaRepository extends JpaRepository<Lemma, Long> {
 
     List<Lemma> findBySitePageId(SitePage siteId);
 
-    @Query(value = "SELECT l.* FROM Lemma l WHERE l.lemma IN :lemmas AND l.site_id = :site", nativeQuery = true)
+    @Query(value = "SELECT l.* FROM Lemma l WHERE l.lemma IN :lemmas AND l.site_id = :site ORDER BY l.frequency LIMIT 100", nativeQuery = true)
     List<Lemma> findLemmaListBySite(@Param("lemmas") List<String> lemmaList,
                                     @Param("site") SitePage site);
 

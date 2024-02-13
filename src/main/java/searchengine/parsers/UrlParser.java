@@ -30,12 +30,14 @@ public class UrlParser extends RecursiveTask<List<StatisticsPage>> {
     public Document getConnect(String url) {
         Document document = null;
         try {
-            int CONNECTION_DELAY = 500;
+            int CONNECTION_DELAY = 2500;
             Thread.sleep(CONNECTION_DELAY);
             document = Jsoup.connect(url)
                     .userAgent(UserAgent.getUserAgent())
-                    .referrer("https://www.google.com")
+                    .timeout(6000)
+                    .method(Connection.Method.GET)
                     .get();
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.debug("Thread interrupted while sleeping");
